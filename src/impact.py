@@ -49,8 +49,8 @@ class ChangeHistory:
     
 class Recommender:
     
-    support = 1
-    confidence = 0.1
+    support = 2
+    confidence = 0.20
     
     def __init__(self, change_history):
         self.change_history = change_history
@@ -69,48 +69,47 @@ class Recommender:
     
     def match_recommendations(self, changes_at_n, rules):
         match_recommentdations = []
-        for specific_change in changes_at_n:
-            if len(specific_change) == 1:
-                elements_to_evaluate = specific_change
-            else: elements_to_evaluate = self.elements_to_evaluate(specific_change)
+        for elements in changes_at_n:
+            rec = Recommendation(elements, rules)
+            elements_to_evaluate = self.find_elements_to_evaluate(elements)
             if elements_to_evaluate:
-                match_recommentdations.append(self.find_recommendation(elements_to_evaluate, rules))
+                rec = self.match_elements_and_recommendation(elements_to_evaluate, rec)
+                if rec:
+                    match_recommentdations.append(rec)
         return match_recommentdations
     
-    def find_recommendation(self, elements_to_evaluate, rules):
-        rec = []
+    def match_elements_and_recommendation(self, elements_to_evaluate, recommendation):
+        matches = []
         for element in elements_to_evaluate:
             element_from = element[0]
-            if len(element) == 1:
-                element_to = element_from
-            else: element_to = element[1]
-            result = self.element_match_rule(element_from, element_to, rules)
-            if result:
-                rec.append(result)
-        return rec
+            element_to = element[1]
+            matcher = self.match_element(element_from, element_to, recommendation)
+            if matcher:
+                matches.append(matcher)
+        return matches
     
-    def element_match_rule(self, element_from, element_to, rules):
+    def match_element(self, element_from, element_to, recommendation):
+        rules = recommendation.recommendation_for(element_from)
         #Correct recommendation
         for rule in rules:
-            rule_from = rule[0]
-            rule_to = rule[1]
-            if element_from in rule_from and element_to in rule_to:
+            if element_from == rule.left and element_to == rule.right:
                 return [element_from, element_to]
         #Incorrect recommendation
         for rule in rules:
-            rule_from = rule[0]
-            rule_to = rule[1]
-            if element_from in rule_from and not element_to in rule_to:
+            if element_from == rule.left and not element_to == rule.right:
                 return ["N"]
         #No recommendation
         return []
             
-    def elements_to_evaluate(self, changes):
+    def find_elements_to_evaluate(self, elements):
+        if len(elements) == 1:
+            #TODO
+            return [elements[0], elements[0]]
         elements_to_evaluate = []
-        for change_from in changes:
-            for change_to in changes:
-                if change_from != change_to:
-                    elements_to_evaluate.append([change_from, change_to])
+        for element_from in elements:
+            for element_to in elements:
+                if element_from != element_to:
+                    elements_to_evaluate.append([element_from, element_to])
         return elements_to_evaluate
     
     def compute_assoc_rules(self, trans, supp, conf):
@@ -123,8 +122,54 @@ class Recommender:
         one_to_one_rules = []
         for rule in rules:
             if len(rule[0]) == 1 and len(rule[1]) == 1:
-                one_to_one_rules.append([list(rule[0])[0], list(rule[1])[0], rule[2], rule[3]])
+                #TODO
+                assoc_rule = AssocRule(list(rule[0])[0], list(rule[1])[0], rule[2], rule[3])
+                one_to_one_rules.append(assoc_rule)
         return one_to_one_rules
+
+class Recommendation:
+    
+    def __init__(self, elements, rules):
+        self.elements = elements
+        self.rules = rules
+        self.rec = {}
+        self.compute_recommendation()
+        
+    def recommendation_for(self, element):
+        if element in self.rec:
+            return self.rec[element]
+        return []
+
+    def compute_recommendation(self):
+        for rule in self.rules:
+            if rule.left in self.elements:
+                self.ensure_recommendation(rule.left, rule)
+    
+    def ensure_recommendation(self, key, rule):
+        if key in self.rec:
+            recs = self.rec[key]
+            recs.append(rule)
+            self.rec[key] = recs
+        else: self.rec[key] = [rule]
+        
+    def __str__(self):
+        s = ""
+        for key in self.rec:
+            s += "Element: " + key + "\n"
+            for rule in self.rec[key]:
+                s += rule.__str__() + "\n"
+        return s
+    
+class AssocRule:
+    
+    def __init__(self, left, right, support, confidence):
+        self.left = left
+        self.right = right
+        self.support = support
+        self.confidence = confidence
+        
+    def __str__(self):
+        return self.left + " -> " + self.right + " " + str(self.support) + " " + str(self.confidence)
         
 def string_to_list(s_list):
     s_list = s_list[1:-1].replace(" ", "")
@@ -150,8 +195,9 @@ def read_changes(path):
     
     return ChangeHistory(changes)
 
-#change_history = read_changes("../apimining_test")
+#change_history = read_changes("../apimining2_che")
 change_history = read_changes("../apimining_test")
 rec = Recommender(change_history)
-result = rec.recommendations_at("11", "added")
+#result = rec.recommendations_at("f2047ea01aaeddbd4a0fc9865b435d0ccb40ffe1", "added")
+result = rec.recommendations_at("10", "added")
 print result
