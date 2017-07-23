@@ -82,7 +82,7 @@ class Recommender:
         for element in elements_to_evaluate:
             element_from = element[0]
             if len(element) == 1:
-                element_to = None
+                element_to = element_from
             else: element_to = element[1]
             result = self.element_match_rule(element_from, element_to, rules)
             if result:
