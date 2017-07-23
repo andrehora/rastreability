@@ -50,7 +50,7 @@ class ChangeHistory:
 class Recommender:
     
     support = 1
-    confidence = 0.2
+    confidence = 0.1
     
     def __init__(self, change_history):
         self.change_history = change_history
@@ -61,34 +61,50 @@ class Recommender:
         return self.compute_assoc_rules(changes_from_1_to_n_minus_1, self.support, self.confidence)
     
     def recommendations_at(self, commit, trans_type):
+        
         changes_at_n = self.change_history.changes_at_commit(commit, trans_type)
         rules_from_1_to_n_minus_1 = self.rules_from_1_to_n_minus_1(commit, trans_type)
         
-        return self.match_recommentdations(changes_at_n, rules_from_1_to_n_minus_1)
+        return self.match_recommendations(changes_at_n, rules_from_1_to_n_minus_1)
     
-    def match_recommentdations(self, changes_at_n, rules):
+    def match_recommendations(self, changes_at_n, rules):
         match_recommentdations = []
         for specific_change in changes_at_n:
-            elements_to_evaluate = self.elements_to_evaluate(specific_change)
-            match_recommentdations.append(self.match_recommentdation(elements_to_evaluate, rules))
+            if len(specific_change) == 1:
+                elements_to_evaluate = specific_change
+            else: elements_to_evaluate = self.elements_to_evaluate(specific_change)
+            if elements_to_evaluate:
+                match_recommentdations.append(self.find_recommendation(elements_to_evaluate, rules))
         return match_recommentdations
     
-    def match_recommentdation(self, elements_to_evaluate, rules):
-        if len(elements_to_evaluate) == 1:
-            return []
-        
-        correct_rec = []
+    def find_recommendation(self, elements_to_evaluate, rules):
+        rec = []
+        for element in elements_to_evaluate:
+            element_from = element[0]
+            if len(element) == 1:
+                element_to = None
+            else: element_to = element[1]
+            result = self.element_match_rule(element_from, element_to, rules)
+            if result:
+                rec.append(result)
+        return rec
+    
+    def element_match_rule(self, element_from, element_to, rules):
+        #Correct recommendation
         for rule in rules:
             rule_from = rule[0]
             rule_to = rule[1]
-            for element in elements_to_evaluate:
-                element_from = element[0]
-                element_to = element[1]
-                # If True, this a correct recommendation
-                if element_from in rule_from and element_to in rule_to:
-                    correct_rec.append(element)
-        return correct_rec
-    
+            if element_from in rule_from and element_to in rule_to:
+                return [element_from, element_to]
+        #Incorrect recommendation
+        for rule in rules:
+            rule_from = rule[0]
+            rule_to = rule[1]
+            if element_from in rule_from and not element_to in rule_to:
+                return ["N"]
+        #No recommendation
+        return []
+            
     def elements_to_evaluate(self, changes):
         elements_to_evaluate = []
         for change_from in changes:
@@ -107,7 +123,7 @@ class Recommender:
         one_to_one_rules = []
         for rule in rules:
             if len(rule[0]) == 1 and len(rule[1]) == 1:
-                one_to_one_rules.append(rule)
+                one_to_one_rules.append([list(rule[0])[0], list(rule[1])[0], rule[2], rule[3]])
         return one_to_one_rules
         
 def string_to_list(s_list):
@@ -135,7 +151,7 @@ def read_changes(path):
     return ChangeHistory(changes)
 
 #change_history = read_changes("../apimining_test")
-change_history = read_changes("../apimining2_che")
+change_history = read_changes("../apimining_test")
 rec = Recommender(change_history)
-result = rec.recommendations_at("921e0d6b11e53045acee06c300884abb469aea68", "added")
+result = rec.recommendations_at("11", "added")
 print result
