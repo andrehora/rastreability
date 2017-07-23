@@ -25,7 +25,8 @@ class ChangeHistory:
         
     def changes_at_commit(self, commit, trans_type):
         changes_at_commit = filter(lambda each: each.commit == commit, self.changes)
-        return map(lambda each: each.transaction_for_type(trans_type), changes_at_commit)
+        changes_at_commit = map(lambda each: each.transaction_for_type(trans_type), changes_at_commit)
+        return filter(lambda each: len(each)>0, changes_at_commit)
     
     def changes_before_commit(self, commit, trans_type):
         changes_before = []
@@ -33,7 +34,8 @@ class ChangeHistory:
             if change.commit == commit:
                 return changes_before
             trans = change.transaction_for_type(trans_type)
-            changes_before.append(trans)
+            if trans:
+                changes_before.append(trans)
         return changes_before
         
     def commits(self):
@@ -56,15 +58,12 @@ class Recommender:
         self.change_history = change_history
         self.trans_type = trans_type
         
-        
-    def rules_from_1_to_n_minus_1(self, commit, trans_type):
-        changes_from_1_to_n_minus_1 = self.change_history.changes_before_commit(commit, trans_type)
-        return self.compute_assoc_rules(changes_from_1_to_n_minus_1, self.support, self.confidence)
-    
     def recommendations_at(self, commit):
-        changes_at_n = self.change_history.changes_at_commit(commit, self.trans_type)
-        rules_from_1_to_n_minus_1 = self.rules_from_1_to_n_minus_1(commit, self.trans_type)
         
+        changes_at_n = self.change_history.changes_at_commit(commit, self.trans_type)
+        changes_from_1_to_n_minus_1 = self.change_history.changes_before_commit(commit, self.trans_type)
+        
+        rules_from_1_to_n_minus_1 = self.compute_assoc_rules(changes_from_1_to_n_minus_1, self.support, self.confidence)
         return self.match_recommendations(changes_at_n, rules_from_1_to_n_minus_1)
     
     def match_recommendations(self, changes_at_n, rules):
@@ -194,9 +193,9 @@ def read_changes(path):
     
     return ChangeHistory(changes)
 
-change_history = read_changes("../apimining2_che")
+#change_history = read_changes("../apimining2_che")
 #change_history = read_changes("../apimining_test")
-rec = Recommender(change_history, "added")
-result = rec.recommendations_at("de2422fb2c3949a4267677d7032490c671239ff4")
-#result = rec.recommendations_at("11", "added")
-print result
+#rec = Recommender(change_history, "added")
+#result = rec.recommendations_at("de2422fb2c3949a4267677d7032490c671239ff4")
+#result = rec.recommendations_at("11")
+#print result
