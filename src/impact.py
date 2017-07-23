@@ -52,55 +52,54 @@ class Recommender:
     support = 2
     confidence = 0.20
     
-    def __init__(self, change_history):
+    def __init__(self, change_history, trans_type):
         self.change_history = change_history
+        self.trans_type = trans_type
         
         
     def rules_from_1_to_n_minus_1(self, commit, trans_type):
         changes_from_1_to_n_minus_1 = self.change_history.changes_before_commit(commit, trans_type)
         return self.compute_assoc_rules(changes_from_1_to_n_minus_1, self.support, self.confidence)
     
-    def recommendations_at(self, commit, trans_type):
-        
-        changes_at_n = self.change_history.changes_at_commit(commit, trans_type)
-        rules_from_1_to_n_minus_1 = self.rules_from_1_to_n_minus_1(commit, trans_type)
+    def recommendations_at(self, commit):
+        changes_at_n = self.change_history.changes_at_commit(commit, self.trans_type)
+        rules_from_1_to_n_minus_1 = self.rules_from_1_to_n_minus_1(commit, self.trans_type)
         
         return self.match_recommendations(changes_at_n, rules_from_1_to_n_minus_1)
     
     def match_recommendations(self, changes_at_n, rules):
         match_recommentdations = []
-        for elements in changes_at_n:
-            rec = Recommendation(elements, rules)
-            elements_to_evaluate = self.find_elements_to_evaluate(elements)
+        for single_elements in changes_at_n:
+            rec = Recommendation(single_elements, rules)
+            elements_to_evaluate = self.find_elements_to_evaluate(single_elements)
             if elements_to_evaluate:
-                rec = self.match_elements_and_recommendation(elements_to_evaluate, rec)
+                rec = self.match_elements_and_recommendation(single_elements, elements_to_evaluate, rec)
                 if rec:
                     match_recommentdations.append(rec)
         return match_recommentdations
     
-    def match_elements_and_recommendation(self, elements_to_evaluate, recommendation):
+    def match_elements_and_recommendation(self, single_elements, elements_to_evaluate, recommendation):
         matches = []
-        for element in elements_to_evaluate:
-            element_from = element[0]
-            element_to = element[1]
-            matcher = self.match_element(element_from, element_to, recommendation)
+        for element in single_elements:
+            matcher = self.match_elements(element, recommendation, elements_to_evaluate)
             if matcher:
                 matches.append(matcher)
         return matches
     
-    def match_element(self, element_from, element_to, recommendation):
+    def match_elements(self, element_from, recommendation, elements_to_evaluate):
+        result = []
         rules = recommendation.recommendation_for(element_from)
-        #Correct recommendation
         for rule in rules:
-            if element_from == rule.left and element_to == rule.right:
-                return [element_from, element_to]
-        #Incorrect recommendation
-        for rule in rules:
-            if element_from == rule.left and not element_to == rule.right:
-                return ["N"]
-        #No recommendation
-        return []
-            
+            if self.match_left_and_right(rule, elements_to_evaluate):
+                result.append((rule.__str__(), True))
+            else: result.append((rule.__str__(), False))
+        return result
+    
+    def match_left_and_right(self, rule, elements_to_evaluate):
+        if [rule.left, rule.right] in elements_to_evaluate:
+            return True
+        return False
+    
     def find_elements_to_evaluate(self, elements):
         if len(elements) == 1:
             #TODO
@@ -195,9 +194,9 @@ def read_changes(path):
     
     return ChangeHistory(changes)
 
-#change_history = read_changes("../apimining2_che")
-change_history = read_changes("../apimining_test")
-rec = Recommender(change_history)
-#result = rec.recommendations_at("f2047ea01aaeddbd4a0fc9865b435d0ccb40ffe1", "added")
-result = rec.recommendations_at("10", "added")
+change_history = read_changes("../apimining2_che")
+#change_history = read_changes("../apimining_test")
+rec = Recommender(change_history, "added")
+result = rec.recommendations_at("de2422fb2c3949a4267677d7032490c671239ff4")
+#result = rec.recommendations_at("11", "added")
 print result
