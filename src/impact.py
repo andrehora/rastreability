@@ -49,7 +49,7 @@ class ChangeHistory:
     
 class Recommender:
     
-    support = 2
+    support = 1
     confidence = 0.2
     
     def __init__(self, change_history):
@@ -134,7 +134,8 @@ def read_changes(path):
     
     return ChangeHistory(changes)
 
-change_history = read_changes("../apimining_test")
+#change_history = read_changes("../apimining_test")
+change_history = read_changes("../apimining2_che")
 rec = Recommender(change_history)
-result = rec.recommendations_at("5", "added")
+result = rec.recommendations_at("921e0d6b11e53045acee06c300884abb469aea68", "added")
 print result
