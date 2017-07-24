@@ -53,7 +53,7 @@ class ChangeHistory:
 class Recommender:
     
     support = 2
-    confidence = 0.20
+    confidence = 0.8
     
     def __init__(self, change_history, trans_type, change_types):
         self.change_history = change_history
@@ -206,9 +206,11 @@ def read_changes(path):
 
 class RecomendationResult:
     
-    all_result = []
-    all_correct_recommendation = []
-    all_incorrect_recommendation = []
+    
+    def __init__(self):
+        self.all_result = []
+        self.all_correct_recommendation = []
+        self.all_incorrect_recommendation = []
     
     def update(self, result):
         self.result = result
@@ -229,13 +231,13 @@ class RecomendationResult:
         return len(self.incorrect_recommendation)
     
     def count_all_recommendation(self):
-        return len(self.result)
+        return len(self.all_result)
     
     def count_all_correct_recommendation(self):
-        return len(self.correct_recommendation)
+        return len(self.all_correct_recommendation)
     
     def count_all_incorrect_recommendation(self):
-        return len(self.incorrect_recommendation)
+        return len(self.all_incorrect_recommendation)
 
 def run():
     
@@ -268,4 +270,10 @@ def run():
         print c_tracked_and_untracked, i_tracked_and_untracked, ac_tracked_and_untracked, ai_tracked_and_untracked
         
 run()
+
+# transactions = (('a', 'b'), ('a', 'b'), ('a', 'b', 'c'), ('b'))
+# relim_input = itemmining.get_relim_input(transactions)
+# item_sets = itemmining.relim(relim_input, min_support=1)
+# rules = assocrules.mine_assoc_rules(item_sets, min_support=1, min_confidence=0.1)
+# print rules
         
