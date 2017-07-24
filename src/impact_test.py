@@ -37,13 +37,13 @@ class TestSample(unittest.TestCase):
         changes = rec[0]
         self.assertEqual(len(changes), 2)
         change = changes[0][0]
-        self.assertEqual(change, ('A -> C 1 0.5', False))
-        change = changes[0][1]
         self.assertEqual(change, ('A -> B 2 1.0', True))
+        change = changes[0][1]
+        self.assertEqual(change, ('A -> C 1 0.5', False))
         change = changes[1][0]
-        self.assertEqual(change, ('B -> C 1 0.5', False))
-        change = changes[1][1]
         self.assertEqual(change, ('B -> A 2 1.0', True))
+        change = changes[1][1]
+        self.assertEqual(change, ('B -> C 1 0.5', False))
     
     def test_iter_3_2(self):
         #RenameMethod;3;[];[A, B, C]
@@ -52,9 +52,9 @@ class TestSample(unittest.TestCase):
         changes = rec[1]
         self.assertEqual(len(changes), 1)
         change = changes[0][0]
-        self.assertEqual(change, ('A -> C 1 0.5', False))
-        change = changes[0][1]
         self.assertEqual(change, ('A -> B 2 1.0', False))
+        change = changes[0][1]
+        self.assertEqual(change, ('A -> C 1 0.5', False))
         
     def test_iter_4(self):
         #RenameMethod;4;[];[A, C]
@@ -63,11 +63,11 @@ class TestSample(unittest.TestCase):
         changes = rec[0]
         self.assertEqual(len(changes), 2)
         change = changes[0][0]
-        self.assertEqual(change, ('A -> K 1 0.25', False))
-        change = changes[0][1]
-        self.assertEqual(change, ('A -> C 1 0.25', True))
-        change = changes[0][2]
         self.assertEqual(change, ('A -> B 3 0.75', False))
+        change = changes[0][1]
+        self.assertEqual(change, ('A -> K 1 0.25', False))
+        change = changes[0][2]
+        self.assertEqual(change, ('A -> C 1 0.25', True))
         change = changes[1][0]
         self.assertEqual(change, ('C -> B 1 1.0', False))
         change = changes[1][1]

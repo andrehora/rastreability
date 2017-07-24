@@ -1,6 +1,7 @@
 from pymining import itemmining, assocrules
 
 class Change:
+    
     def __init__(self, commit, change_type, removed, added):
         self.commit = commit
         self.change_type = change_type
@@ -28,13 +29,13 @@ class ChangeHistory:
         changes_at_commit = map(lambda each: each.transaction_for_type(trans_type), changes_at_commit)
         return filter(lambda each: len(each)>0, changes_at_commit)
     
-    def changes_before_commit(self, commit, trans_type):
+    def changes_before_commit(self, commit, trans_type, change_types):
         changes_before = []
         for change in self.changes:
             if change.commit == commit:
                 return changes_before
             trans = change.transaction_for_type(trans_type)
-            if trans:
+            if trans and change.change_type in change_types:
                 changes_before.append(trans)
         return changes_before
         
@@ -54,45 +55,47 @@ class Recommender:
     support = 2
     confidence = 0.20
     
-    def __init__(self, change_history, trans_type):
+    def __init__(self, change_history, trans_type, change_types=["SameMethod", "RenameMethod", "MoveMethod"]):
         self.change_history = change_history
         self.trans_type = trans_type
+        self.change_types = change_types
         
     def recommendations_at(self, commit):
-        
         changes_at_n = self.change_history.changes_at_commit(commit, self.trans_type)
-        changes_from_1_to_n_minus_1 = self.change_history.changes_before_commit(commit, self.trans_type)
+        changes_from_1_to_n_minus_1 = self.change_history.changes_before_commit(commit, self.trans_type, self.change_types)
+        print len(changes_from_1_to_n_minus_1)
         
         rules_from_1_to_n_minus_1 = self.compute_assoc_rules(changes_from_1_to_n_minus_1, self.support, self.confidence)
         return self.match_recommendations(changes_at_n, rules_from_1_to_n_minus_1)
     
     def match_recommendations(self, changes_at_n, rules):
-        match_recommentdations = []
+        result = []
         for single_elements in changes_at_n:
             rec = Recommendation(single_elements, rules)
+            #print rec
             elements_to_evaluate = self.find_elements_to_evaluate(single_elements)
             if elements_to_evaluate:
-                rec = self.match_elements_and_recommendation(single_elements, elements_to_evaluate, rec)
-                if rec:
-                    match_recommentdations.append(rec)
-        return match_recommentdations
+                rec = self.match_elements_and_recommendation(single_elements, elements_to_evaluate, rec, result)
+                #if rec:
+                    #result.append(rec)
+        return result
     
-    def match_elements_and_recommendation(self, single_elements, elements_to_evaluate, recommendation):
-        matches = []
+    def match_elements_and_recommendation(self, single_elements, elements_to_evaluate, recommendation, result):
+        #matches = []
         for element in single_elements:
-            matcher = self.match_elements(element, recommendation, elements_to_evaluate)
-            if matcher:
-                matches.append(matcher)
-        return matches
+            matcher = self.match_elements(element, recommendation, elements_to_evaluate, result)
+            #if matcher:
+                #result.append(matcher)
+        #return matches
     
-    def match_elements(self, element_from, recommendation, elements_to_evaluate):
-        result = []
+    def match_elements(self, element_from, recommendation, elements_to_evaluate, result):
+        #result = []
         rules = recommendation.recommendation_for(element_from)
         for rule in rules:
             if self.match_left_and_right(rule, elements_to_evaluate):
                 result.append((rule.__str__(), True))
             else: result.append((rule.__str__(), False))
-        return result
+        #return result
     
     def match_left_and_right(self, rule, elements_to_evaluate):
         if [rule.left, rule.right] in elements_to_evaluate:
@@ -132,6 +135,7 @@ class Recommendation:
         self.rules = rules
         self.rec = {}
         self.compute_recommendation()
+        self.sort_recommendation()
         
     def recommendation_for(self, element):
         if element in self.rec:
@@ -142,7 +146,13 @@ class Recommendation:
         for rule in self.rules:
             if rule.left in self.elements:
                 self.ensure_recommendation(rule.left, rule)
-    
+                
+    def sort_recommendation(self):
+        for key in self.rec:
+            rules = self.rec[key]
+            sorted_rules = sorted(rules, key=lambda rule: rule.confidence, reverse=True)
+            self.rec[key] = sorted_rules[0:10]
+            
     def ensure_recommendation(self, key, rule):
         if key in self.rec:
             recs = self.rec[key]
@@ -193,9 +203,19 @@ def read_changes(path):
     
     return ChangeHistory(changes)
 
-#change_history = read_changes("../apimining2_che")
-#change_history = read_changes("../apimining_test")
-#rec = Recommender(change_history, "added")
-#result = rec.recommendations_at("de2422fb2c3949a4267677d7032490c671239ff4")
-#result = rec.recommendations_at("11")
-#print result
+change_history = read_changes("../apimining2_che")
+
+rec_tracked = Recommender(change_history, "added", ["SameMethod"])
+rec_both = Recommender(change_history, "added")
+
+for commit in change_history.distinct_commits:
+    
+    result_tracked = rec_tracked.recommendations_at(commit)
+    print commit
+    print len(filter(lambda each: each[1], result_tracked))
+    print len(filter(lambda each: not each[1], result_tracked))
+    
+    result_both = rec_both.recommendations_at(commit)
+    print "--"
+    print len(filter(lambda each: each[1], result_both))
+    print len(filter(lambda each: not each[1], result_both))
