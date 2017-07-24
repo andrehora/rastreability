@@ -63,7 +63,7 @@ class Recommender:
     def recommendations_at(self, commit):
         changes_at_n = self.change_history.changes_at_commit(commit, self.trans_type)
         changes_from_1_to_n_minus_1 = self.change_history.changes_before_commit(commit, self.trans_type, self.change_types)
-        print len(changes_from_1_to_n_minus_1)
+        #print len(changes_from_1_to_n_minus_1)
         
         rules_from_1_to_n_minus_1 = self.compute_assoc_rules(changes_from_1_to_n_minus_1, self.support, self.confidence)
         return self.match_recommendations(changes_at_n, rules_from_1_to_n_minus_1)
@@ -208,14 +208,20 @@ change_history = read_changes("../apimining2_che")
 rec_tracked = Recommender(change_history, "added", ["SameMethod"])
 rec_both = Recommender(change_history, "added")
 
-for commit in change_history.distinct_commits:
+for commit in ["01ad2e7f070a35fbfc6724dcf13f6c5e0d2085c5"]:
     
     result_tracked = rec_tracked.recommendations_at(commit)
-    print commit
-    print len(filter(lambda each: each[1], result_tracked))
-    print len(filter(lambda each: not each[1], result_tracked))
+    x1 = len(filter(lambda each: each[1], result_tracked))
+    x2 = len(filter(lambda each: not each[1], result_tracked))
+    print result_tracked
     
     result_both = rec_both.recommendations_at(commit)
-    print "--"
-    print len(filter(lambda each: each[1], result_both))
-    print len(filter(lambda each: not each[1], result_both))
+    y1 = len(filter(lambda each: each[1], result_both))
+    y2 = len(filter(lambda each: not each[1], result_both))
+    print result_both
+    
+    #if x1 != y1 or x2 != y2:
+    print commit
+    print x1, x2
+    print y1, y2
+        
