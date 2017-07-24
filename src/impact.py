@@ -55,7 +55,7 @@ class Recommender:
     support = 2
     confidence = 0.20
     
-    def __init__(self, change_history, trans_type, change_types=["SameMethod", "RenameMethod", "MoveMethod"]):
+    def __init__(self, change_history, trans_type, change_types):
         self.change_history = change_history
         self.trans_type = trans_type
         self.change_types = change_types
@@ -197,31 +197,75 @@ def read_changes(path):
             
             removed_list = string_to_list(removed)
             added_list = string_to_list(added)
-               
-            change = Change(commit, change_type, removed_list, added_list)
-            changes.append(change)
+            
+            if removed_list or added_list:
+                change = Change(commit, change_type, removed_list, added_list)
+                changes.append(change)
     
     return ChangeHistory(changes)
 
-change_history = read_changes("../apimining2_che")
+class RecomendationResult:
+    
+    all_result = []
+    all_correct_recommendation = []
+    all_incorrect_recommendation = []
+    
+    def update(self, result):
+        self.result = result
+        self.correct_recommendation = filter(lambda each: each[1], result)
+        self.incorrect_recommendation = filter(lambda each: not each[1], result)
+        
+        self.all_result.extend(result)
+        self.all_correct_recommendation.extend(self.correct_recommendation)
+        self.all_incorrect_recommendation.extend(self.incorrect_recommendation)
+        
+    def count_recommendation(self):
+        return len(self.result)
+    
+    def count_correct_recommendation(self):
+        return len(self.correct_recommendation)
+    
+    def count_incorrect_recommendation(self):
+        return len(self.incorrect_recommendation)
+    
+    def count_all_recommendation(self):
+        return len(self.result)
+    
+    def count_all_correct_recommendation(self):
+        return len(self.correct_recommendation)
+    
+    def count_all_incorrect_recommendation(self):
+        return len(self.incorrect_recommendation)
 
-rec_tracked = Recommender(change_history, "added", ["SameMethod"])
-rec_both = Recommender(change_history, "added")
-
-for commit in ["01ad2e7f070a35fbfc6724dcf13f6c5e0d2085c5"]:
+def run():
     
-    result_tracked = rec_tracked.recommendations_at(commit)
-    x1 = len(filter(lambda each: each[1], result_tracked))
-    x2 = len(filter(lambda each: not each[1], result_tracked))
-    print result_tracked
+    change_history = read_changes("../apimining2_che")
     
-    result_both = rec_both.recommendations_at(commit)
-    y1 = len(filter(lambda each: each[1], result_both))
-    y2 = len(filter(lambda each: not each[1], result_both))
-    print result_both
+    rec_tracked = Recommender(change_history, "added", ["SameMethod"])
+    rec_tracked_and_untracked = Recommender(change_history, "added", ["SameMethod", "RenameMethod", "MoveMethod"])
     
-    #if x1 != y1 or x2 != y2:
-    print commit
-    print x1, x2
-    print y1, y2
+    result_tracked = RecomendationResult()
+    result_tracked_and_untracked = RecomendationResult()
+    
+    for commit in change_history.distinct_commits:
+        
+        r = rec_tracked.recommendations_at(commit)
+        result_tracked.update(r)
+        c_tracked = result_tracked.count_correct_recommendation()
+        i_tracked = result_tracked.count_incorrect_recommendation()
+        ac_tracked = result_tracked.count_all_correct_recommendation()
+        ai_tracked = result_tracked.count_all_incorrect_recommendation()
+        
+        r = rec_tracked_and_untracked.recommendations_at(commit)
+        result_tracked_and_untracked.update(r)
+        c_tracked_and_untracked = result_tracked_and_untracked.count_correct_recommendation()
+        i_tracked_and_untracked = result_tracked_and_untracked.count_incorrect_recommendation()
+        ac_tracked_and_untracked = result_tracked_and_untracked.count_all_correct_recommendation()
+        ai_tracked_and_untracked = result_tracked_and_untracked.count_all_incorrect_recommendation()
+        
+        print commit
+        print c_tracked, i_tracked, ac_tracked, ai_tracked
+        print c_tracked_and_untracked, i_tracked_and_untracked, ac_tracked_and_untracked, ai_tracked_and_untracked
+        
+run()
         
