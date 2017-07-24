@@ -53,7 +53,7 @@ class ChangeHistory:
 class Recommender:
     
     support = 2
-    confidence = 0.8
+    confidence = 0.75
     
     def __init__(self, change_history, trans_type, change_types):
         self.change_history = change_history
@@ -205,7 +205,6 @@ def read_changes(path):
     return ChangeHistory(changes)
 
 class RecomendationResult:
-    
     
     def __init__(self):
         self.all_result = []
