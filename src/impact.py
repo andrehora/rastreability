@@ -246,6 +246,12 @@ class RecomendationResult:
     
     def count_all_incorrect_recommendation(self):
         return len(self.all_incorrect_recommendation)
+    
+    def precision(self):
+        if self.count_all_recommendation() == 0:
+            return 0
+        r = float(self.count_all_correct_recommendation()) / self.count_all_recommendation()
+        return round(r,3)
 
 def run(path, transaction_type, supp, conf):
     
@@ -260,12 +266,12 @@ def run(path, transaction_type, supp, conf):
     for commit in change_history.distinct_commits:
         
         r = rec_tracked.recommendations_at(commit)
-        
         result_tracked.update(r)
         c_tracked = result_tracked.count_correct_recommendation()
         i_tracked = result_tracked.count_incorrect_recommendation()
         ac_tracked = result_tracked.count_all_correct_recommendation()
         ai_tracked = result_tracked.count_all_incorrect_recommendation()
+        prec_tracked = result_tracked.precision()
         
         r = rec_tracked_and_untracked.recommendations_at(commit)
         result_tracked_and_untracked.update(r)
@@ -273,14 +279,23 @@ def run(path, transaction_type, supp, conf):
         i_tracked_and_untracked = result_tracked_and_untracked.count_incorrect_recommendation()
         ac_tracked_and_untracked = result_tracked_and_untracked.count_all_correct_recommendation()
         ai_tracked_and_untracked = result_tracked_and_untracked.count_all_incorrect_recommendation()
+        prec_tracked_and_untracked = result_tracked_and_untracked.precision()
         
-        #print r
+        precision_gain = 0
+        recall_gain = 0
+        if prec_tracked:
+            precision_gain = round(float(prec_tracked_and_untracked)/prec_tracked,2)
+        if ac_tracked:
+            recall_gain = round(float(ac_tracked_and_untracked)/ac_tracked,2)
+        
         print commit
-        print c_tracked, i_tracked, ac_tracked, ai_tracked
-        print c_tracked_and_untracked, i_tracked_and_untracked, ac_tracked_and_untracked, ai_tracked_and_untracked
-
-run("../apimining2_che", "added", 2, 0.5)
-#run("../apimining2_MPAndroidChart", "removed")
+        print c_tracked, i_tracked, ac_tracked, ai_tracked, prec_tracked
+        print c_tracked_and_untracked, i_tracked_and_untracked, ac_tracked_and_untracked, ai_tracked_and_untracked, prec_tracked_and_untracked, precision_gain, recall_gain 
+        
+#run("../apimining2_che", "added", 2, 0.5)
+#run("../apimining2_MPAndroidChart", "added", 2, 0.5)
+#run("../apimining2_guava", "evolution", 2, 0.5)
+run("../apimining2_storm", "evolution", 2, 0.5)
 
 # transactions = (('a', 'b'), ('a', 'b'), ('a', 'b', 'c'), ('b'))
 # relim_input = itemmining.get_relim_input(transactions)
