@@ -56,13 +56,12 @@ class ChangeHistory:
     
 class Recommender:
     
-    support = 2
-    confidence = 0.5
-    
-    def __init__(self, change_history, trans_type, change_types):
+    def __init__(self, support, confidence, change_history, transaction_type, change_types):
         self.change_history = change_history
-        self.trans_type = trans_type
+        self.trans_type = transaction_type
         self.change_types = change_types
+        self.support = support
+        self.confidence = confidence
         
     def recommendations_at(self, commit):
         changes_at_n = self.change_history.changes_at_commit(commit, self.trans_type)
@@ -129,7 +128,11 @@ class Recommender:
             if len(rule[0]) == 1 and len(rule[1]) == 1:
                 left = list(rule[0])[0]
                 right = list(rule[1])[0]
-                if left.startswith("R-") and right.startswith("A-"):
+                if self.trans_type == "evolution":
+                    if left.startswith("R-") and right.startswith("A-"):
+                        assoc_rule = AssocRule(left, right, rule[2], rule[3])
+                        one_to_one_rules.append(assoc_rule)
+                else: 
                     assoc_rule = AssocRule(left, right, rule[2], rule[3])
                     one_to_one_rules.append(assoc_rule)
         return one_to_one_rules
@@ -244,12 +247,12 @@ class RecomendationResult:
     def count_all_incorrect_recommendation(self):
         return len(self.all_incorrect_recommendation)
 
-def run():
+def run(path, transaction_type, supp, conf):
     
-    change_history = read_changes("../apimining2_che")
+    change_history = read_changes(path)
     
-    rec_tracked = Recommender(change_history, "evolution", ["SameMethod"])
-    rec_tracked_and_untracked = Recommender(change_history, "evolution", ["SameMethod", "RenameMethod", "MoveMethod"])
+    rec_tracked = Recommender(supp, conf, change_history, transaction_type, ["SameMethod"])
+    rec_tracked_and_untracked = Recommender(supp, conf, change_history, transaction_type, ["SameMethod", "RenameMethod", "MoveMethod"])
     
     result_tracked = RecomendationResult()
     result_tracked_and_untracked = RecomendationResult()
@@ -275,12 +278,12 @@ def run():
         print commit
         print c_tracked, i_tracked, ac_tracked, ai_tracked
         print c_tracked_and_untracked, i_tracked_and_untracked, ac_tracked_and_untracked, ai_tracked_and_untracked
-        
-run()
+
+run("../apimining2_che", "added", 2, 0.5)
+#run("../apimining2_MPAndroidChart", "removed")
 
 # transactions = (('a', 'b'), ('a', 'b'), ('a', 'b', 'c'), ('b'))
 # relim_input = itemmining.get_relim_input(transactions)
 # item_sets = itemmining.relim(relim_input, min_support=1)
 # rules = assocrules.mine_assoc_rules(item_sets, min_support=1, min_confidence=0.1)
 # print rules
-        
