@@ -16,7 +16,11 @@ class Change:
             return self.added
         
         if trans_type == "evolution":
-            pass
+            if not self.removed:
+                return []
+            removed = map(lambda each: "R-"+each, self.removed)
+            added = map(lambda each: "A-"+each, self.added)
+            return removed + added
     
 class ChangeHistory:
     
@@ -53,7 +57,7 @@ class ChangeHistory:
 class Recommender:
     
     support = 2
-    confidence = 0.75
+    confidence = 0.5
     
     def __init__(self, change_history, trans_type, change_types):
         self.change_history = change_history
@@ -71,8 +75,8 @@ class Recommender:
     def match_recommendations(self, changes_at_n, rules):
         result = []
         for single_elements in changes_at_n:
+            #print single_elements
             rec = Recommendation(single_elements, rules)
-            #print rec
             elements_to_evaluate = self.find_elements_to_evaluate(single_elements)
             if elements_to_evaluate:
                 rec = self.match_elements_and_recommendation(single_elements, elements_to_evaluate, rec, result)
@@ -123,9 +127,11 @@ class Recommender:
         one_to_one_rules = []
         for rule in rules:
             if len(rule[0]) == 1 and len(rule[1]) == 1:
-                #TODO
-                assoc_rule = AssocRule(list(rule[0])[0], list(rule[1])[0], rule[2], rule[3])
-                one_to_one_rules.append(assoc_rule)
+                left = list(rule[0])[0]
+                right = list(rule[1])[0]
+                if left.startswith("R-") and right.startswith("A-"):
+                    assoc_rule = AssocRule(left, right, rule[2], rule[3])
+                    one_to_one_rules.append(assoc_rule)
         return one_to_one_rules
 
 class Recommendation:
@@ -242,8 +248,8 @@ def run():
     
     change_history = read_changes("../apimining2_che")
     
-    rec_tracked = Recommender(change_history, "added", ["SameMethod"])
-    rec_tracked_and_untracked = Recommender(change_history, "added", ["SameMethod", "RenameMethod", "MoveMethod"])
+    rec_tracked = Recommender(change_history, "evolution", ["SameMethod"])
+    rec_tracked_and_untracked = Recommender(change_history, "evolution", ["SameMethod", "RenameMethod", "MoveMethod"])
     
     result_tracked = RecomendationResult()
     result_tracked_and_untracked = RecomendationResult()
@@ -251,6 +257,7 @@ def run():
     for commit in change_history.distinct_commits:
         
         r = rec_tracked.recommendations_at(commit)
+        
         result_tracked.update(r)
         c_tracked = result_tracked.count_correct_recommendation()
         i_tracked = result_tracked.count_incorrect_recommendation()
@@ -264,6 +271,7 @@ def run():
         ac_tracked_and_untracked = result_tracked_and_untracked.count_all_correct_recommendation()
         ai_tracked_and_untracked = result_tracked_and_untracked.count_all_incorrect_recommendation()
         
+        #print r
         print commit
         print c_tracked, i_tracked, ac_tracked, ai_tracked
         print c_tracked_and_untracked, i_tracked_and_untracked, ac_tracked_and_untracked, ai_tracked_and_untracked
