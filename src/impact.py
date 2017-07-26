@@ -39,7 +39,7 @@ class ChangeHistory:
             if change.commit == commit:
                 return changes_before
             trans = change.transaction_for_type(trans_type)
-            if trans and change.change_type in change_types:
+            if trans and change.change_type in change_types and len(trans) < 5:
                 changes_before.append(trans)
         return changes_before
         
@@ -139,6 +139,8 @@ class Recommender:
 
 class Recommendation:
     
+    number_of_recommendations = 10
+    
     def __init__(self, elements, rules):
         self.elements = elements
         self.rules = rules
@@ -160,7 +162,7 @@ class Recommendation:
         for key in self.rec:
             rules = self.rec[key]
             sorted_rules = sorted(rules, key=lambda rule: rule.confidence, reverse=True)
-            self.rec[key] = sorted_rules[0:10]
+            self.rec[key] = sorted_rules[0:self.number_of_recommendations]
             
     def ensure_recommendation(self, key, rule):
         if key in self.rec:
@@ -292,10 +294,12 @@ def run(path, transaction_type, supp, conf):
         print c_tracked, i_tracked, ac_tracked, ai_tracked, prec_tracked
         print c_tracked_and_untracked, i_tracked_and_untracked, ac_tracked_and_untracked, ai_tracked_and_untracked, prec_tracked_and_untracked, precision_gain, recall_gain 
         
-#run("../apimining2_che", "added", 2, 0.5)
-#run("../apimining2_MPAndroidChart", "added", 2, 0.5)
-#run("../apimining2_guava", "evolution", 2, 0.5)
-run("../apimining2_storm", "evolution", 2, 0.5)
+#run("../apimining2_che", "evolution", 2, 0.9)
+run("../apimining2_clojure", "added", 3, 0.1)
+#run("../apimining2_fresco", "evolution", 2, 0.9)
+#run("../apimining2_guava", "evolution", 2, 0.9)
+#run("../apimining2_MPAndroidChart", "added", 3, 0.1)
+#run("../apimining2_storm", "evolution", 1, 0.9)
 
 # transactions = (('a', 'b'), ('a', 'b'), ('a', 'b', 'c'), ('b'))
 # relim_input = itemmining.get_relim_input(transactions)
