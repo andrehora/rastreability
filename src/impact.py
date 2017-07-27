@@ -305,7 +305,9 @@ def run_and_export(path, transaction_type, supp, conf):
         print>>out_file,"Precision gain:", precision_gain
         print>>out_file, "Recall gain:", recall_gain
 
-system = "che"
+#system = "che"
+#system = "fresco"
+system = "guava"
 system_path = "../apimining2_"+system
 
 run_and_export(system_path, "added", 1, 0.1)
