@@ -308,7 +308,8 @@ def run_and_export(path, transaction_type, supp, conf):
 #system = "che"
 #system = "fresco"
 #system = "guava"
-system = "clojure"
+#system = "clojure"
+system = "storm"
 system_path = "../apimining2_"+system
 
 run_and_export(system_path, "added", 1, 0.1)
