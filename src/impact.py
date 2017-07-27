@@ -24,6 +24,8 @@ class Change:
     
 class ChangeHistory:
     
+    transaction_size = 5
+    
     def __init__(self, changes):
         self.changes = changes
         self.distinct_commits = self.remove_duplicates(self.commits())
@@ -39,7 +41,7 @@ class ChangeHistory:
             if change.commit == commit:
                 return changes_before
             trans = change.transaction_for_type(trans_type)
-            if trans and change.change_type in change_types and len(trans) < 5:
+            if trans and change.change_type in change_types and len(trans) < self.transaction_size:
                 changes_before.append(trans)
         return changes_before
         
@@ -254,11 +256,18 @@ class RecomendationResult:
             return 0
         r = float(self.count_all_correct_recommendation()) / self.count_all_recommendation()
         return round(r,3)
-
-def run(path, transaction_type, supp, conf):
+    
+def run_and_export(path, transaction_type, supp, conf):
+    
+    export_file_name = path + "-" + transaction_type + "-" + str(supp) + "-" + str(conf)
+    out_file = open(export_file_name, 'w')
+    
+    print>>out_file, path
+    print>>out_file, transaction_type
+    print>>out_file, "Support:", supp
+    print>>out_file, "Confidence:", conf
     
     change_history = read_changes(path)
-    
     rec_tracked = Recommender(supp, conf, change_history, transaction_type, ["SameMethod"])
     rec_tracked_and_untracked = Recommender(supp, conf, change_history, transaction_type, ["SameMethod", "RenameMethod", "MoveMethod"])
     
@@ -290,19 +299,21 @@ def run(path, transaction_type, supp, conf):
         if ac_tracked:
             recall_gain = round(float(ac_tracked_and_untracked)/ac_tracked,2)
         
-        print commit
-        print c_tracked, i_tracked, ac_tracked, ai_tracked, prec_tracked
-        print c_tracked_and_untracked, i_tracked_and_untracked, ac_tracked_and_untracked, ai_tracked_and_untracked, prec_tracked_and_untracked, precision_gain, recall_gain 
-        
-#run("../apimining2_che", "evolution", 2, 0.9)
-run("../apimining2_clojure", "added", 3, 0.1)
-#run("../apimining2_fresco", "evolution", 2, 0.9)
-#run("../apimining2_guava", "evolution", 2, 0.9)
-#run("../apimining2_MPAndroidChart", "added", 3, 0.1)
-#run("../apimining2_storm", "evolution", 1, 0.9)
+        print>>out_file,"Commit:", commit
+        print>>out_file,"Tracked:", c_tracked, i_tracked, ac_tracked, ai_tracked, prec_tracked
+        print>>out_file,"Untracked:", c_tracked_and_untracked, i_tracked_and_untracked, ac_tracked_and_untracked, ai_tracked_and_untracked, prec_tracked_and_untracked
+        print>>out_file,"Precision gain:", precision_gain
+        print>>out_file, "Recall gain:", recall_gain
 
-# transactions = (('a', 'b'), ('a', 'b'), ('a', 'b', 'c'), ('b'))
-# relim_input = itemmining.get_relim_input(transactions)
-# item_sets = itemmining.relim(relim_input, min_support=1)
-# rules = assocrules.mine_assoc_rules(item_sets, min_support=1, min_confidence=0.1)
-# print rules
+system = "che"
+system_path = "../apimining2_"+system
+
+run_and_export(system_path, "added", 1, 0.1)
+run_and_export(system_path, "added", 1, 0.9)
+run_and_export(system_path, "added", 3, 0.1)
+run_and_export(system_path, "added", 3, 0.9)
+
+run_and_export(system_path, "evolution", 1, 0.1)
+run_and_export(system_path, "evolution", 1, 0.9)
+run_and_export(system_path, "evolution", 3, 0.1)
+run_and_export(system_path, "evolution", 3, 0.9)
