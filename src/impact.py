@@ -301,13 +301,14 @@ def run_and_export(path, transaction_type, supp, conf):
         
         print>>out_file,"Commit:", commit
         print>>out_file,"Tracked:", c_tracked, i_tracked, ac_tracked, ai_tracked, prec_tracked
-        print>>out_file,"Untracked:", c_tracked_and_untracked, i_tracked_and_untracked, ac_tracked_and_untracked, ai_tracked_and_untracked, prec_tracked_and_untracked
+        print>>out_file,"Tracked+Untracked:", c_tracked_and_untracked, i_tracked_and_untracked, ac_tracked_and_untracked, ai_tracked_and_untracked, prec_tracked_and_untracked
         print>>out_file,"Precision gain:", precision_gain
         print>>out_file, "Recall gain:", recall_gain
 
 #system = "che"
 #system = "fresco"
-system = "guava"
+#system = "guava"
+system = "clojure"
 system_path = "../apimining2_"+system
 
 run_and_export(system_path, "added", 1, 0.1)
