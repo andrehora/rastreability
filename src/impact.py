@@ -309,7 +309,13 @@ def run_and_export(path, transaction_type, supp, conf):
 #system = "fresco"
 #system = "guava"
 #system = "clojure"
-system = "storm"
+#system = "storm"
+#system = "MPAndroidChart"
+#system = "glide"
+#system = "guice"
+#system = "retrofit"
+#system = "okhttp"
+system = "RxJava"
 system_path = "../apimining2_"+system
 
 run_and_export(system_path, "added", 1, 0.1)
