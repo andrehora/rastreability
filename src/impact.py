@@ -65,6 +65,10 @@ class Recommender:
         self.support = support
         self.confidence = confidence
         
+    def run_assoc_rules(self):
+        all_changes = self.change_history.changes_before_commit("", self.trans_type, self.change_types)
+        return self.compute_assoc_rules(all_changes, self.support, self.confidence)
+        
     def recommendations_at(self, commit):
         changes_at_n = self.change_history.changes_at_commit(commit, self.trans_type)
         changes_from_1_to_n_minus_1 = self.change_history.changes_before_commit(commit, self.trans_type, self.change_types)
@@ -189,8 +193,14 @@ class AssocRule:
         self.support = support
         self.confidence = confidence
         
+    def __eq__(self, other): 
+        return self.__str__() == other.__str__()
+    
+    def __hash__(self):
+        return hash(self.__str__())
+        
     def __str__(self):
-        return self.left + " -> " + self.right + " " + str(self.support) + " " + str(self.confidence)
+        return self.left + " -> " + self.right #+ " " + str(self.support) + " " + str(self.confidence)
         
 def string_to_list(s_list):
     s_list = s_list[1:-1].replace(" ", "")
@@ -256,74 +266,3 @@ class RecomendationResult:
             return 0
         r = float(self.count_all_correct_recommendation()) / self.count_all_recommendation()
         return round(r,3)
-    
-def run_and_export(path, transaction_type, supp, conf):
-    
-    export_file_name = path + "-" + transaction_type + "-" + str(supp) + "-" + str(conf)
-    out_file = open(export_file_name, 'w')
-    
-    print>>out_file, path
-    print>>out_file, transaction_type
-    print>>out_file, "Support:", supp
-    print>>out_file, "Confidence:", conf
-    
-    change_history = read_changes(path)
-    rec_tracked = Recommender(supp, conf, change_history, transaction_type, ["SameMethod"])
-    rec_tracked_and_untracked = Recommender(supp, conf, change_history, transaction_type, ["SameMethod", "RenameMethod", "MoveMethod"])
-    
-    result_tracked = RecomendationResult()
-    result_tracked_and_untracked = RecomendationResult()
-    
-    for commit in change_history.distinct_commits:
-        
-        r = rec_tracked.recommendations_at(commit)
-        result_tracked.update(r)
-        c_tracked = result_tracked.count_correct_recommendation()
-        i_tracked = result_tracked.count_incorrect_recommendation()
-        ac_tracked = result_tracked.count_all_correct_recommendation()
-        ai_tracked = result_tracked.count_all_incorrect_recommendation()
-        prec_tracked = result_tracked.precision()
-        
-        r = rec_tracked_and_untracked.recommendations_at(commit)
-        result_tracked_and_untracked.update(r)
-        c_tracked_and_untracked = result_tracked_and_untracked.count_correct_recommendation()
-        i_tracked_and_untracked = result_tracked_and_untracked.count_incorrect_recommendation()
-        ac_tracked_and_untracked = result_tracked_and_untracked.count_all_correct_recommendation()
-        ai_tracked_and_untracked = result_tracked_and_untracked.count_all_incorrect_recommendation()
-        prec_tracked_and_untracked = result_tracked_and_untracked.precision()
-        
-        precision_gain = 0
-        recall_gain = 0
-        if prec_tracked:
-            precision_gain = round(float(prec_tracked_and_untracked)/prec_tracked,2)
-        if ac_tracked:
-            recall_gain = round(float(ac_tracked_and_untracked)/ac_tracked,2)
-        
-        print>>out_file,"Commit:", commit
-        print>>out_file,"Tracked:", c_tracked, i_tracked, ac_tracked, ai_tracked, prec_tracked
-        print>>out_file,"Tracked+Untracked:", c_tracked_and_untracked, i_tracked_and_untracked, ac_tracked_and_untracked, ai_tracked_and_untracked, prec_tracked_and_untracked
-        print>>out_file,"Precision gain:", precision_gain
-        print>>out_file, "Recall gain:", recall_gain
-
-#system = "che"
-#system = "fresco"
-#system = "guava"
-#system = "clojure"
-#system = "storm"
-#system = "MPAndroidChart"
-#system = "glide"
-#system = "guice"
-#system = "retrofit"
-#system = "okhttp"
-system = "RxJava"
-system_path = "../apimining2_"+system
-
-run_and_export(system_path, "added", 1, 0.1)
-run_and_export(system_path, "added", 1, 0.9)
-run_and_export(system_path, "added", 3, 0.1)
-run_and_export(system_path, "added", 3, 0.9)
-
-run_and_export(system_path, "evolution", 1, 0.1)
-run_and_export(system_path, "evolution", 1, 0.9)
-run_and_export(system_path, "evolution", 3, 0.1)
-run_and_export(system_path, "evolution", 3, 0.9)
