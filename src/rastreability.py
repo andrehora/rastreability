@@ -608,10 +608,11 @@ def print_models(model_path):
 #     print g.print_unique_paths()
 #     print g.unique_path_sizes()
 #     print model
+    print len(g.paths)
     print len(g.paths_with_tracked_changes())
     print len(g.paths_with_untracked_changes())
     
-print_models("../history_models/model_RxJava")
+# print_models("../history_models/model_RxJava")
 # print_models("../history_models/model_elasticsearch")
 # print_models("../history_models/model_retrofit")
 # print_models("../history_models/model_okhttp")
@@ -627,6 +628,8 @@ print_models("../history_models/model_RxJava")
 # print_models("../history_models/model_storm")
 # print_models("../history_models/model_che")
 #print_models("../history_models/all")
+print_models("../history_models/model_test")
+
 
 # graph = nx.DiGraph()
 # graph.add_edge("A","B")
