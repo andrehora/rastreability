@@ -486,6 +486,9 @@ class Path:
         self.root = path_tuple[0]
         self.chemin = Chemin(path_tuple[1])
     
+    def has_tracked_change(self):
+        return self.chemin.has_tracked_change()
+    
     def has_untracked_change(self):
         return self.chemin.has_untracked_change()
     
@@ -544,6 +547,12 @@ class GraphAnalysis:
         for edge in self.model.relations:
             self.graph.add_edge(edge.alternative_name1, edge.alternative_name2)
     
+    def paths_with_tracked_changes(self):
+        return filter(lambda path: path.has_tracked_change(), self.paths)
+    
+    def paths_with_untracked_changes(self):
+        return filter(lambda path: path.has_untracked_change(), self.paths)
+    
     def path_sizes(self):
         #Remove the paths with size == 1 because they have only one addition
         return map(lambda path: path.size(), self.paths)
@@ -597,11 +606,13 @@ def print_models(model_path):
     model = ModelHistory(model_path, True, True, True)
     g = GraphAnalysis(model)
 #     print g.roots
-    print g.print_paths()
+#     print g.print_paths()
 #     print g.path_sizes()
 #     print g.print_unique_paths()
 #     print g.unique_path_sizes()
 #     print model
+    print len(g.paths_with_tracked_changes())
+    print len(g.paths_with_untracked_changes())
     
 print_models("../history_models/model_RxJava")
 # print_models("../history_models/model_elasticsearch")
