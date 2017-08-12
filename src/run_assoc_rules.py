@@ -19,20 +19,20 @@ def run_and_export(path, out_file, transaction_type, supp, conf):
     tracked_rules = tracked_setup.run_assoc_rules()
     tracked_and_untracked_rules = tracked_and_untracked_setup.run_assoc_rules()
     
-    exclusive_tracked_rules = set(tracked_rules) - set(tracked_and_untracked_rules)
+    #exclusive_tracked_rules = set(tracked_rules) - set(tracked_and_untracked_rules)
     exclusive_tracked_and_untracked_rules = set(tracked_and_untracked_rules) - set(tracked_rules)
     
-    print "Tracked rules: " + pretty_rules(tracked_rules)
-    print "Tracked & untracked rules: " + pretty_rules(tracked_and_untracked_rules)
-    #print "New rules: " + pretty_rules(new_rules)
-    print len(exclusive_tracked_rules)
-    print len(exclusive_tracked_and_untracked_rules)
+    print>>out_file, "Tracked rules: " + pretty_rules(tracked_rules)
+    print>>out_file, "Tracked & untracked rules: " + pretty_rules(tracked_and_untracked_rules)
+    print>>out_file, "New rules: " + pretty_rules(exclusive_tracked_and_untracked_rules)
+    #print len(exclusive_tracked_rules)
+    #print len(exclusive_tracked_and_untracked_rules)
     
     len_tracked_rules = len(set(tracked_rules))
     len_tracked_and_untracked_rules = len(set(tracked_and_untracked_rules))
     absolute_improvement = len_tracked_and_untracked_rules - len_tracked_rules
     relative_improvement = round(float(len_tracked_and_untracked_rules)/len_tracked_rules,2)
-    print str(len_tracked_rules), str(len_tracked_and_untracked_rules), absolute_improvement, relative_improvement
+    print>>out_file, str(len_tracked_rules), str(len_tracked_and_untracked_rules), absolute_improvement, relative_improvement
 
 #system = "che"
 #system = "fresco"

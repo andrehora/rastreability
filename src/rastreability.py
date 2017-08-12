@@ -1,4 +1,6 @@
 import dateutil.parser, collections, networkx as nx
+from __builtin__ import True
+from Carbon.Aliases import true
 
 class ModelUtil:
     
@@ -56,7 +58,7 @@ class ModelHistory:
         
     def select_random(self):
         from random import randint
-        for each in range(0,10):
+        for each in range(0,15):
             random_id = randint(1, len(self.relations))
             print self.relations[random_id].full_name()
         
@@ -412,6 +414,12 @@ class CheminElement:
         self.count = full_name.split(self.separator)[1].rstrip()
         self.relation_name = full_name.split(self.separator)[2].rstrip()
     
+    def is_tracked(self):
+        return self.relation_name == "SameType" or self.relation_name == "SameMethod"
+    
+    def is_untracked(self):
+        return not self.is_tracked()
+    
     def name_and_relation(self):
         return self.name + " " + self.relation_name + "\n"
     
@@ -434,9 +442,14 @@ class Chemin:
             chemin_element = CheminElement(element)
             self.chemin_elements.append(chemin_element)
     
+    def has_untracked_change(self):
+        for element in self.chemin_elements:
+            if element.is_untracked():
+                return True
+        return False
+    
     def element_names(self):
         return map(lambda elem: elem.name_and_relation() , self.chemin_elements)
-        #return map(lambda elem: elem.name , self.chemin_elements)
     
     def unique_element_names(self):
         return self.remove_duplicates(self.element_names())
@@ -472,6 +485,12 @@ class Path:
     def __init__(self, path_tuple):
         self.root = path_tuple[0]
         self.chemin = Chemin(path_tuple[1])
+    
+    def has_untracked_change(self):
+        return self.chemin.has_untracked_change()
+    
+    def relations(self):
+        return self.chemin.relations()
         
     def path_element_names(self):
         return self.chemin.element_names()
@@ -489,7 +508,7 @@ class Path:
         return str(self.size_unique_elements()) + "\n" + str(self.chemin.print_unique_element_names())
     
     def __str__(self):
-        return self.root + " " + str(self.size()) + "\n" + str(self.chemin)
+        return "Root: " + self.root + " " + str(self.size()) + " " + str(self.has_untracked_change()) + "\n" + str(self.chemin)
     
 class GraphAnalysis:
     
@@ -576,31 +595,30 @@ def print_models(model_path):
 #     print model
     
     model = ModelHistory(model_path, True, True, True)
-#     model.select_random(model_path)
-#     g = GraphAnalysis(model)
+    g = GraphAnalysis(model)
 #     print g.roots
-#     print g.print_paths()
+    print g.print_paths()
 #     print g.path_sizes()
 #     print g.print_unique_paths()
 #     print g.unique_path_sizes()
 #     print model
     
 print_models("../history_models/model_RxJava")
-print_models("../history_models/model_elasticsearch")
-print_models("../history_models/model_retrofit")
-print_models("../history_models/model_okhttp")
-print_models("../history_models/model_guava")
-print_models("../history_models/model_MPAndroidChart")
-print_models("../history_models/model_Glide")
-print_models("../history_models/model_Android-Universal-Image-Loader")
-print_models("../history_models/model_kotlin")
-print_models("../history_models/model_spring-framework")
-print_models("../history_models/model_fresco")
-print_models("../history_models/model_clojure")
-print_models("../history_models/model_guice")
-print_models("../history_models/model_storm")
-print_models("../history_models/model_che")
-print_models("../history_models/all")
+# print_models("../history_models/model_elasticsearch")
+# print_models("../history_models/model_retrofit")
+# print_models("../history_models/model_okhttp")
+# print_models("../history_models/model_guava")
+# print_models("../history_models/model_MPAndroidChart")
+# print_models("../history_models/model_Glide")
+# print_models("../history_models/model_Android-Universal-Image-Loader")
+# print_models("../history_models/model_kotlin")
+# print_models("../history_models/model_spring-framework")
+# print_models("../history_models/model_fresco")
+# print_models("../history_models/model_clojure")
+# print_models("../history_models/model_guice")
+# print_models("../history_models/model_storm")
+# print_models("../history_models/model_che")
+#print_models("../history_models/all")
 
 # graph = nx.DiGraph()
 # graph.add_edge("A","B")
