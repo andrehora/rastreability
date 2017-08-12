@@ -487,14 +487,11 @@ class Path:
         self.chemin = Chemin(path_tuple[1])
     
     def has_tracked_change(self):
-        return self.chemin.has_tracked_change()
+        return not self.has_untracked_change()
     
     def has_untracked_change(self):
         return self.chemin.has_untracked_change()
     
-    def relations(self):
-        return self.chemin.relations()
-        
     def path_element_names(self):
         return self.chemin.element_names()
     
