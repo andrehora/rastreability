@@ -531,6 +531,18 @@ class GraphAnalysis:
             s += path.__str__()
         return s
     
+    def print_paths_with_tracked_changes(self):
+        s = "Paths: " + str(len(self.paths_with_tracked_changes())) + "\n"
+        for path in self.paths_with_tracked_changes():
+            s += path.__str__()
+        return s
+    
+    def print_paths_with_untracked_changes(self):
+        s = "Paths: " + str(len(self.paths_with_untracked_changes())) + "\n"
+        for path in self.paths_with_untracked_changes():
+            s += path.__str__()
+        return s
+    
     def print_unique_paths(self):
         s = "Paths: " + str(len(self.paths)) + "\n"
         for path in self.paths_sorted_by_unique_elements():
@@ -549,6 +561,14 @@ class GraphAnalysis:
     
     def paths_with_untracked_changes(self):
         return filter(lambda path: path.has_untracked_change(), self.paths)
+    
+    def paths_with_tracked_changes_sizes(self):
+        #Remove the paths with size == 1 because they have only one addition
+        return map(lambda path: path.size(), self.paths_with_tracked_changes())
+    
+    def paths_with_untracked_changes_sizes(self):
+        #Remove the paths with size == 1 because they have only one addition
+        return map(lambda path: path.size(), self.paths_with_untracked_changes())
     
     def path_sizes(self):
         #Remove the paths with size == 1 because they have only one addition
@@ -604,15 +624,17 @@ def print_models(model_path):
     g = GraphAnalysis(model)
 #     print g.roots
 #     print g.print_paths()
+    print g.paths_with_untracked_changes_sizes()
+    print g.print_paths_with_untracked_changes()
 #     print g.path_sizes()
 #     print g.print_unique_paths()
 #     print g.unique_path_sizes()
 #     print model
-    print len(g.paths)
-    print len(g.paths_with_tracked_changes())
-    print len(g.paths_with_untracked_changes())
+#     print len(g.paths)
+#     print len(g.paths_with_tracked_changes())
+#     print len(g.paths_with_untracked_changes())
     
-# print_models("../history_models/model_RxJava")
+print_models("../history_models/model_RxJava")
 # print_models("../history_models/model_elasticsearch")
 # print_models("../history_models/model_retrofit")
 # print_models("../history_models/model_okhttp")
@@ -628,7 +650,7 @@ def print_models(model_path):
 # print_models("../history_models/model_storm")
 # print_models("../history_models/model_che")
 #print_models("../history_models/all")
-print_models("../history_models/model_test")
+# print_models("../history_models/model_test")
 
 
 # graph = nx.DiGraph()
