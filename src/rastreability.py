@@ -556,6 +556,23 @@ class GraphAnalysis:
         for edge in self.model.relations:
             self.graph.add_edge(edge.alternative_name1, edge.alternative_name2)
     
+    def paths_25(self):
+        factor = 0.25
+        to = int(round(len(self.paths)*factor))
+        return self.paths[0:to]
+    
+    def paths_with_tracked_changes_25(self):
+        return filter(lambda path: path.has_tracked_change(), self.paths_25())
+    
+    def paths_with_untracked_changes_25(self):
+        return filter(lambda path: path.has_untracked_change(), self.paths_25())
+    
+    def paths_with_tracked_changes_sizes_25(self):
+        return map(lambda path: path.size(), self.paths_with_tracked_changes_25())
+    
+    def paths_with_untracked_changes_sizes_25(self):
+        return map(lambda path: path.size(), self.paths_with_untracked_changes_25())
+    
     def paths_with_tracked_changes(self):
         return filter(lambda path: path.has_tracked_change(), self.paths)
     
@@ -563,11 +580,9 @@ class GraphAnalysis:
         return filter(lambda path: path.has_untracked_change(), self.paths)
     
     def paths_with_tracked_changes_sizes(self):
-        #Remove the paths with size == 1 because they have only one addition
         return map(lambda path: path.size(), self.paths_with_tracked_changes())
     
     def paths_with_untracked_changes_sizes(self):
-        #Remove the paths with size == 1 because they have only one addition
         return map(lambda path: path.size(), self.paths_with_untracked_changes())
     
     def path_sizes(self):
@@ -604,7 +619,7 @@ class GraphAnalysis:
 
 def print_models(model_path):
     
-#     print model_path
+    print model_path
     
 #     model = ModelHistory(model_path, True)
 #     g = GraphAnalysis(model)
@@ -624,31 +639,34 @@ def print_models(model_path):
     g = GraphAnalysis(model)
 #     print g.roots
 #     print g.print_paths()
-    print g.paths_with_untracked_changes_sizes()
-    print g.print_paths_with_untracked_changes()
-#     print g.path_sizes()
-#     print g.print_unique_paths()
-#     print g.unique_path_sizes()
-#     print model
+    
 #     print len(g.paths)
 #     print len(g.paths_with_tracked_changes())
 #     print len(g.paths_with_untracked_changes())
+#     print g.paths_with_tracked_changes_sizes()
+#     print g.paths_with_untracked_changes_sizes()
+    
+    print len(g.paths_25())
+    print len(g.paths_with_tracked_changes_25())
+    print len(g.paths_with_untracked_changes_25())
+    print g.paths_with_tracked_changes_sizes_25()
+    print g.paths_with_untracked_changes_sizes_25()
     
 print_models("../history_models/model_RxJava")
-# print_models("../history_models/model_elasticsearch")
-# print_models("../history_models/model_retrofit")
-# print_models("../history_models/model_okhttp")
-# print_models("../history_models/model_guava")
-# print_models("../history_models/model_MPAndroidChart")
-# print_models("../history_models/model_Glide")
-# print_models("../history_models/model_Android-Universal-Image-Loader")
-# print_models("../history_models/model_kotlin")
-# print_models("../history_models/model_spring-framework")
-# print_models("../history_models/model_fresco")
-# print_models("../history_models/model_clojure")
-# print_models("../history_models/model_guice")
-# print_models("../history_models/model_storm")
-# print_models("../history_models/model_che")
+print_models("../history_models/model_elasticsearch")
+print_models("../history_models/model_retrofit")
+print_models("../history_models/model_okhttp")
+print_models("../history_models/model_guava")
+print_models("../history_models/model_MPAndroidChart")
+print_models("../history_models/model_Glide")
+print_models("../history_models/model_Android-Universal-Image-Loader")
+print_models("../history_models/model_kotlin")
+print_models("../history_models/model_spring-framework")
+print_models("../history_models/model_fresco")
+print_models("../history_models/model_clojure")
+print_models("../history_models/model_guice")
+print_models("../history_models/model_storm")
+print_models("../history_models/model_che")
 #print_models("../history_models/all")
 # print_models("../history_models/model_test")
 
